@@ -1,0 +1,63 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "STM32F407 Debug (DAPLink)",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/debug/STM32F407_Template.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/stm32f4x.cfg"
+            ],
+            "svdFile": "${workspaceFolder}/STM32F407.svd",
+            "runToEntryPoint": "main",
+            "preLaunchTask": "Build Debug",
+            "preRestartCommands": [
+                "enable breakpoint",
+                "monitor reset init"
+            ],
+            "postRestartCommands": [
+                "break main"
+            ],
+            "showDevDebugOutput": "parsed",
+            "liveWatch": {
+                "enabled": true,
+                "refreshRate": 200,
+                "sampleInterval": 50
+            },
+            "graphConfig": [
+                {
+                    "name": "Global Variables",
+                    "type": "plot",
+                    "enabled": false
+                }
+            ],
+            "rttConfig": {
+                "enabled": false
+            },
+            "gdbPath": "/opt/homebrew/bin/arm-none-eabi-gdb"
+        },
+        {
+            "name": "STM32F407 Attach (DAPLink)",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/debug/STM32F407_Template.elf",
+            "request": "attach",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/stm32f4x.cfg"
+            ],
+            "svdFile": "${workspaceFolder}/STM32F407.svd",
+            "liveWatch": {
+                "enabled": true,
+                "refreshRate": 200,
+                "sampleInterval": 50
+            },
+            "gdbPath": "/opt/homebrew/bin/arm-none-eabi-gdb"
+        }
+    ]
+}
