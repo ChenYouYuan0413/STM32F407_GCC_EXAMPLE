@@ -12,7 +12,7 @@
                 "interface/cmsis-dap.cfg",
                 "target/stm32f4x.cfg"
             ],
-            "svdFile": "${workspaceFolder}/STM32F407.svd",
+            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
             "runToEntryPoint": "main",
             "preLaunchTask": "Build Debug",
             "preRestartCommands": [
@@ -22,21 +22,10 @@
             "postRestartCommands": [
                 "break main"
             ],
-            "showDevDebugOutput": "parsed",
             "liveWatch": {
                 "enabled": true,
                 "refreshRate": 200,
                 "sampleInterval": 50
-            },
-            "graphConfig": [
-                {
-                    "name": "Global Variables",
-                    "type": "plot",
-                    "enabled": false
-                }
-            ],
-            "rttConfig": {
-                "enabled": false
             },
             "gdbPath": "/opt/homebrew/bin/arm-none-eabi-gdb"
         },
@@ -51,7 +40,7 @@
                 "interface/cmsis-dap.cfg",
                 "target/stm32f4x.cfg"
             ],
-            "svdFile": "${workspaceFolder}/STM32F407.svd",
+            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
             "liveWatch": {
                 "enabled": true,
                 "refreshRate": 200,
