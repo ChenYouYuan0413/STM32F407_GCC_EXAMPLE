@@ -19,6 +19,10 @@
 					//初始化PE13 PE14
 					GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14;
 					GPIO_Init(GPIOE, &GPIO_InitStruct);
+					// led_ctrl(D1,LED_OFF);
+					// led_ctrl(D2,LED_OFF);
+					// led_ctrl(D3,LED_OFF);
+					// led_ctrl(D4,LED_OFF);
 								
 					
 	}
@@ -40,6 +44,19 @@ void led_ctrl(int led_num,int led_state)
 			GPIOx = GPIOF;
 			GPIO_Pin_x = GPIO_Pin_9;
 			break;
+		case D2:
+			GPIOx = GPIOF;
+			GPIO_Pin_x = GPIO_Pin_10;
+			break;
+		case D3:
+			GPIOx = GPIOE;
+			GPIO_Pin_x = GPIO_Pin_13;
+			break;
+		case D4:
+			GPIOx = GPIOE;
+			GPIO_Pin_x = GPIO_Pin_14;
+			break;
+			
 //			case D2: 
 //			case D3: 
 //			case D4: 
