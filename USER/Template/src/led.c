@@ -19,12 +19,6 @@
 					//初始化PE13 PE14
 					GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14;
 					GPIO_Init(GPIOE, &GPIO_InitStruct);
-					// led_ctrl(D1,LED_OFF);
-					// led_ctrl(D2,LED_OFF);
-					// led_ctrl(D3,LED_OFF);
-					// led_ctrl(D4,LED_OFF);
-								
-					
 	}
 	
 /*LED灯 控制函数
