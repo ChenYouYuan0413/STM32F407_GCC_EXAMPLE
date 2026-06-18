@@ -2,51 +2,86 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "STM32F407 Debug (DAPLink)",
+            "name": "DAPlink",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/debug/STM32F407_Template.elf",
             "request": "launch",
             "type": "cortex-debug",
+            "device": "STM32F407VE",
+            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
             "servertype": "openocd",
             "configFiles": [
-                "interface/cmsis-dap.cfg",
-                "target/stm32f4x.cfg"
+                "openocd_dap.cfg"
             ],
-            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
-            "runToEntryPoint": "main",
             "preLaunchTask": "Build Debug",
-            "preRestartCommands": [
-                "enable breakpoint",
+            "runToEntryPoint": "main",
+            "overrideLaunchCommands": [
+                "monitor reset init",
+                "load",
                 "monitor reset init"
-            ],
-            "postRestartCommands": [
-                "break main"
             ],
             "liveWatch": {
                 "enabled": true,
-                "refreshRate": 200,
-                "sampleInterval": 50
-            },
-            "gdbPath": "/opt/homebrew/bin/arm-none-eabi-gdb"
+                "samplesPerSecond": 4
+            }
         },
         {
-            "name": "STM32F407 Attach (DAPLink)",
+            "name": "STLink",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/debug/STM32F407_Template.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "STM32F407VE",
+            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
+            "servertype": "openocd",
+            "configFiles": [
+                "openocd_stlink.cfg"
+            ],
+            "preLaunchTask": "Build Debug",
+            "runToEntryPoint": "main",
+            "overrideLaunchCommands": [
+                "monitor reset init",
+                "load",
+                "monitor reset init"
+            ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            }
+        },
+        {
+            "name": "STLink-attach",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/debug/STM32F407_Template.elf",
             "request": "attach",
             "type": "cortex-debug",
+            "device": "STM32F407VE",
+            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
             "servertype": "openocd",
             "configFiles": [
-                "interface/cmsis-dap.cfg",
-                "target/stm32f4x.cfg"
+                "openocd_stlink.cfg"
             ],
-            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
             "liveWatch": {
                 "enabled": true,
-                "refreshRate": 200,
-                "sampleInterval": 50
-            },
-            "gdbPath": "/opt/homebrew/bin/arm-none-eabi-gdb"
+                "samplesPerSecond": 4
+            }
+        },
+        {
+            "name": "DAPlink-attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/debug/STM32F407_Template.elf",
+            "request": "attach",
+            "type": "cortex-debug",
+            "device": "STM32F407VE",
+            "svdFile": "${workspaceFolder}/../stm32f407-gcc-framework/STM32F407.svd",
+            "servertype": "openocd",
+            "configFiles": [
+                "openocd_dap.cfg"
+            ],
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            }
         }
     ]
 }
