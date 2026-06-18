@@ -1,38 +1,59 @@
-# STM32F407 ARM GCC 开发环境
+# STM32F407 GCC 示例项目
+
+> 基于 [STM32F407 GCC Build Framework](https://github.com/ChenYouYuan0413/STM32F407_GCC_Build_Framework) 的示例工程。
+> 原 Keil MDK 标准外设库模板，现已迁移为 ARM GCC + OpenOCD + VSCode Cortex-Debug + LinkScope 开发流程。
+
+## 快速开始
+
+### 1. 克隆框架
+
+```bash
+git clone https://github.com/ChenYouYuan0413/STM32F407_GCC_Build_Framework.git
+```
+
+### 2. 获取本示例项目
+
+`Makefile` 指向框架路径，默认为 `../stm32f407-gcc-framework/`。如果框架目录名不同，修改 `Makefile` 中的 include 路径即可。
+
+### 3. 编译 & 调试
+
+```bash
+make BUILD=debug all     # 编译
+make flash               # 烧录
+```
+
+或在 VSCode 中 F5 一键调试。
+
+---
 
 ## 环境
 
-| 工具 | 版本 | 安装 |
+| 工具 | 版本 | 安装（macOS） |
 |------|------|------|
 | `arm-none-eabi-gcc` | 16.1.0 | `brew install arm-none-eabi-gcc` |
 | `arm-none-eabi-gdb` | 17.2 | 随 GCC 安装 |
 | `OpenOCD` | 0.12.0 | `brew install openocd` |
 | VSCode Cortex-Debug | 1.12.1 | 扩展 `marus25.cortex-debug` |
-| LinkScope | 1.3.0-mac-enhanced | 自行编译（Qt5），详见 [LinkScope/README.md](../LinkScope/README.md) |
-| Python | 3.12 | conda 环境 `stm32`（pyOCD） |
+| LinkScope | 1.3.0-mac | [ChenYouYuan0413/LinkScope](https://github.com/ChenYouYuan0413/LinkScope/tree/mac)（`mac` 分支），需自行编译（Qt5） |
+
+> Windows / Linux 环境配置见 [框架 README](https://github.com/ChenYouYuan0413/STM32F407_GCC_Build_Framework#环境)
 
 ## 项目结构
 
 ```
-cyy_ws/
-├── stm32f407-gcc-framework/   # 共享框架（所有 F407 工程复用）
-│   ├── CORE/                  # CMSIS + GCC 启动文件
-│   ├── FWLIB/                 # 标准外设库
-│   ├── Makefile.common        # 公共构建逻辑（自动发现源码）
-│   ├── STM32F407VGTX_FLASH.ld # 链接脚本
-│   ├── STM32F407.svd          # SVD 外设描述
-│   ├── openocd.cfg            # DAPLink 配置
-│   ├── syscalls.c             # freestanding 运行时桩
-│   └── .vscode/               # VSCode 模板
+stm32/
+├── stm32f407-gcc-framework/   # ⭐ 共享框架（所有 F407 工程复用）
+│   └── (从 https://github.com/ChenYouYuan0413/STM32F407_GCC_Build_Framework 克隆)
 │
-├── STM32F407/                 # 项目
-│   ├── USER/Template/src/     # 应用代码
-│   ├── Makefile               # 3 行：项目名 + USER 路径 + include 框架
+├── STM32F407/                 # ← 本示例项目
+│   ├── USER/Template/src/     # 应用代码（main.c, delay.c, led.c, uart.c...）
+│   ├── Makefile               # 4 行：项目名 + USER 路径 + HSE 值 + include 框架
 │   ├── openocd_dap.cfg        # DAPLink 本地配置
 │   ├── openocd_stlink.cfg     # ST-Link 本地配置
-│   └── .vscode/               # launch.json, tasks.json
+│   └── .vscode/               # launch.json, tasks.json, c_cpp_properties.json
 │
-└── LinkScope/                 # 开源高速变量监视器
+└── LinkScope/                 # 开源高速变量监视器（mac 分支）
+```
 ```
 
 ## 快速开始
@@ -59,12 +80,20 @@ make flash
 
 ### 新工程接入
 
+1. 克隆框架到本地
+2. 创建项目目录，放入 `USER/` 应用代码
+3. 写一个 4 行 Makefile：
+
 ```makefile
-# 只需 3 行 Makefile
-PROJECT = MyProject
-USER    = ./USER/Template/src
-include ../stm32f407-gcc-framework/Makefile.common
+PROJECT   = MyProject
+USER      = ./USER/Template/src
+HSE_VALUE = 8000000             # 可选，默认 8MHz
+include   ../stm32f407-gcc-framework/Makefile.common
 ```
+
+4. 复制 `.vscode/launch.json` 模板（可选，F5 调试用）
+
+> 完整说明见 [框架仓库](https://github.com/ChenYouYuan0413/STM32F407_GCC_Build_Framework)
 
 ## 调试器配置
 
@@ -73,19 +102,37 @@ include ../stm32f407-gcc-framework/Makefile.common
 | `openocd_dap.cfg` | DAPLink / CMSIS-DAP |
 | `openocd_stlink.cfg` | ST-Link/V2 |
 
-两个配置文件都包含 `$_TARGETNAME configure -gdb-max-connections 4`，允许 Cortex-Debug（2 连接）和 LinkScope（1-2 连接）同时接入。
+两个配置文件都包含 `$_TARGETNAME configure -gdb-max-connections 4`。
+
+**为什么需要 4 个 GDB 连接**：
+
+| 连接数 | 占用者 | 用途 |
+|--------|--------|------|
+| 1 | Cortex-Debug 主 GDB | 断点、单步、烧录、变量查看 |
+| 1 | Cortex-Debug Live Watch | 后台轮询 Watch 面板变量值 |
+| 1 | LinkScope | 高速批量采样 `x/Nwx` |
+| 1 | 预留 | 第二个 LinkScope 连接或手动 GDB 调试 |
+
+OpenOCD 默认只允许 1 个 GDB 连接，Cortex-Debug 的 helper 脚本会自动 +1（变成 2）。但 Cortex-Debug 自己的 Live Watch 就占了第 2 个，所以必须手动提到 4 以上才能让 LinkScope 接入。
 
 ## LinkScope 高速变量监控
 
-### 编译
+### 获取 & 编译
 
 ```bash
+git clone https://github.com/ChenYouYuan0413/LinkScope.git
+cd LinkScope
+git checkout mac          # ⚠️ macOS 功能在 mac 分支，master 是原始 Windows 版
 brew install qt@5
-cd ~/cyy_ws/LinkScope
 /opt/homebrew/Cellar/qt@5/5.15.19/bin/qmake LinkScope.pro
 make -j8
 open LinkScope.app
 ```
+
+> **分支说明**：
+> - `master` — 原版（Windows），不支持 Cortex Watch 同步、高速模式、停靠窗口等
+> - `mac` — macOS 增强版，包含所有本文描述的功能
+> - Windows 增强版待开发，可参考 `mac` 分支的修改移植
 
 ### 使用
 
