@@ -80,22 +80,41 @@ void usart1_send_str(char *s,int len)
 以\r\n结尾
 */
 
+// ---- USART1 环形缓冲区 ----
+#define UART1_RX_BUF_SIZE  256
+static volatile uint8_t  uart1_rx_buf[UART1_RX_BUF_SIZE];
+static volatile uint16_t uart1_rx_head = 0;  // ISR 写入位置
+static volatile uint16_t uart1_rx_tail = 0;  // 主循环读取位置
+
+// ISR 中调用，存入一个字节
 void USART1_IRQHandler(void)
 {
-    unsigned char ch; //接受数据的变量
-    if(USART_GetITStatus(USART1,USART_IT_RXNE) == SET)
-    {
-        ch = USART_ReceiveData(USART1); //从串口1接受数据
-        if(ch == '1')
-        {
-            //亮灯
+    if (USART_GetITStatus(USART1, USART_IT_RXNE) == SET) {
+        uint8_t ch = USART_ReceiveData(USART1);
+        uint16_t next = (uart1_rx_head + 1) % UART1_RX_BUF_SIZE;
+        if (next != uart1_rx_tail) {       // 缓冲区未满
+            uart1_rx_buf[uart1_rx_head] = ch;
+            uart1_rx_head = next;
         }
-        if(ch == '2')
-        {
-            //灭灯
-        }
-        USART_ClearITPendingBit(USART1,USART_IT_RXNE);
+        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
     }
+}
+
+// 主循环中调用，返回实际读取的字节数
+int uart1_read(uint8_t *dst, int maxlen)
+{
+    int cnt = 0;
+    while (cnt < maxlen && uart1_rx_tail != uart1_rx_head) {
+        dst[cnt++] = uart1_rx_buf[uart1_rx_tail];
+        uart1_rx_tail = (uart1_rx_tail + 1) % UART1_RX_BUF_SIZE;
+    }
+    return cnt;
+}
+
+// 返回缓冲区中待读取的字节数
+int uart1_available(void)
+{
+    return (uart1_rx_head - uart1_rx_tail + UART1_RX_BUF_SIZE) % UART1_RX_BUF_SIZE;
 }
 
 /*

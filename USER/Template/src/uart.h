@@ -19,6 +19,11 @@ s:要发送的字符串
 len:要发送的字符串的长度 字节数
 */
 void usart1_send_str(char *s,int len);
+
+// USART1 环形缓冲区（ISR 安全）
+int  uart1_read(uint8_t *dst, int maxlen);
+int  uart1_available(void);
+
 /*
     串口2的初始化
     usart2_init
