@@ -1,8 +1,7 @@
 #ifndef __UART_H__
 #define __UART_H__
 
-
-
+#include "uart2_proto.h"
 
 void usart1_init(int baudrate);
 /*
@@ -34,20 +33,22 @@ int  uart1_available(void);
 void usart2_init(int baudrate);
 
 /*
-    usart2_send_byte 串口1发送1个字节
+    usart2_send_byte 串口2发送1个字节
     参数列表:
         ch:要发送的那个字节
 */
 void usart2_send_byte(char ch);
 
 /*
-    usart2_send_str 串口1发送字符串
+    usart2_send_str 串口2发送字符串
     参数列表:
-        s:要发送的字符串 
+        s:要发送的字符串
         len:要发送的字符串的长度 字节数
 */
 void usart2_send_str(char *s,int len);
 
-
+// USART2 环形缓冲区（用于协议帧接收）
+int  uart2_read(uint8_t *dst, int maxlen);
+int  uart2_available(void);
 
 #endif

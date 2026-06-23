@@ -131,7 +131,7 @@ void usart2_init(int baudrate)
     USART_InitTypeDef USART_InitStruct;
     NVIC_InitTypeDef NVIC_InitStruct;
 
-    //1.配置USART1对应的GPIO
+    //1.配置USART2对应的GPIO
     //时钟使能
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA,ENABLE);
     //配置结构体
@@ -156,7 +156,7 @@ void usart2_init(int baudrate)
     USART_Init(USART2,&USART_InitStruct);
 
     //3.使能中断 如果需要中断
-    USART_ITConfig(USART2,USART_IT_RXNE,ENABLE);//接受数据寄存器不为空产生中断 
+    USART_ITConfig(USART2,USART_IT_RXNE,ENABLE);//接受数据寄存器不为空产生中断
 
 
     //4.配置NVIC
@@ -168,11 +168,11 @@ void usart2_init(int baudrate)
 
     //开启串口
     USART_Cmd(USART2,ENABLE);
-}   
+}
 
 
 /*
-    usart2_send_byte 串口1发送1个字节
+    usart2_send_byte 串口2发送1个字节
     参数列表:
         ch:要发送的那个字节
 */
@@ -185,9 +185,9 @@ void usart2_send_byte(char ch)
 
 
 /*
-    usart2_send_str 串口1发送字符串
+    usart2_send_str 串口2发送字符串
     参数列表:
-        s:要发送的字符串 
+        s:要发送的字符串
         len:要发送的字符串的长度 字节数
 */
 void usart2_send_str(char *s,int len)
@@ -199,37 +199,36 @@ void usart2_send_str(char *s,int len)
     }
 }
 
+// ---- USART2 环形缓冲区 (二进制协议帧, 主循环解析) ----
+#define UART2_RX_BUF_SIZE  256
+static volatile uint8_t  uart2_rx_buf[UART2_RX_BUF_SIZE];
+static volatile uint16_t uart2_rx_head = 0;
+static volatile uint16_t uart2_rx_tail = 0;
 
-/*
-    串口2中断,主要就是用来接受数据
-    需要把接受的数据进行保存,最好自定义一个通信协议
-    比如:
-        发送过来的数据
-        以\r\n结尾
-*/
-char r_buf[512] = {0};   //保存接受的字符串
-
-int cnt = 0;   //接受的数量
-int smoke = 0;
 void USART2_IRQHandler(void)
 {
-    unsigned char ch;   //接受数据的变量
-
-    if(USART_GetITStatus(USART2,USART_IT_RXNE) == SET)//获取串口中断标志
-    {   
-        //处理GY39发送回来的数据
-        USART_ClearITPendingBit(USART2,USART_IT_RXNE);
-        ch  = USART_ReceiveData(USART2);//从串口2接受数据
-        r_buf[cnt] = ch;//把数据存入到数组中
-        cnt++;
-        //什么时候数据接受完毕,数据接受完成了 几首温度 气压海拔 湿度 总共需要接受15个数据
-        if(cnt == 9)
-        {
-
-						smoke = r_buf[2]<<8|r_buf[3];
-					cnt = 0;
-
+    if (USART_GetITStatus(USART2, USART_IT_RXNE) == SET) {
+        uint8_t ch = USART_ReceiveData(USART2);
+        uint16_t next = (uart2_rx_head + 1) % UART2_RX_BUF_SIZE;
+        if (next != uart2_rx_tail) {
+            uart2_rx_buf[uart2_rx_head] = ch;
+            uart2_rx_head = next;
         }
-
+        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
     }
+}
+
+int uart2_read(uint8_t *dst, int maxlen)
+{
+    int cnt = 0;
+    while (cnt < maxlen && uart2_rx_tail != uart2_rx_head) {
+        dst[cnt++] = uart2_rx_buf[uart2_rx_tail];
+        uart2_rx_tail = (uart2_rx_tail + 1) % UART2_RX_BUF_SIZE;
+    }
+    return cnt;
+}
+
+int uart2_available(void)
+{
+    return (uart2_rx_head - uart2_rx_tail + UART2_RX_BUF_SIZE) % UART2_RX_BUF_SIZE;
 }
